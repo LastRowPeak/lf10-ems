@@ -1,4 +1,4 @@
-# Starter für das LF10 Projekt
+# Starter für das LF10 Projekt - Angular
 
 
 ## Requirements
@@ -35,108 +35,300 @@ docker compose up
 http://localhost:8089/swagger
 ```
 
-# Postgres
+### Anwendungsstart
 
+1. Docker-Container starten:
+```bash
+docker compose up
 ```
 
-### Intellij-Ansicht für Postgres Datenbank einrichten (geht nicht in Webstorm!)
+2. Authentik Admin-Interface öffnen: http://localhost:9000
+3. Mit Admin-Credentials einloggen (a@b.com / secret)
+4. Passwort für Benutzer "john" setzen:
+  - Navigiere zu Directory → Users
+  - Klicke auf den Benutzer "john"
+  - Setze ein Passwort (z.B. "test123")
+
+5. Angular-App starten:
+```bash
+npm start
+```
+
+6. Browser öffnen: http://localhost:4200
+7. Auf "Zur Anwendung" klicken
+8. Mit john und dem gesetzten Passwort einloggen
+
+
+# Tutorial: OIDC-Authentifizierung mit Authentik integrieren
+
+In diesem Tutorial lernst du, wie du die OIDC-Authentifizierung (OpenID Connect) mit Authentik in deine Angular-Anwendung integrierst.
+
+## Schritt 1: Abhängigkeiten installieren
+
+Installiere die benötigte OAuth2-Bibliothek:
 
 ```bash
-1. Lasse den Docker-Container mit den Abhängigkeiten laufen
-2. rechts im Fenster den Reiter Database öffnen
-3. In der Database-Symbolleiste auf das Datenbanksymbol mit dem Schlüssel klicken
-4. auf das Pluszeichen klicken
-5. Datasource from URL auswählen
-6. URL der DB einfügen (jdbc:postgresql://postgres-employee:5432/employee_db) und PostgreSQL-Treiber auswählen, mit OK bestätigen
-7. Username lf10_starter und Passwort secret eintragen (siehe application.properties), mit Apply bestätigen
-8. im Reiter Schemas alle Häkchen entfernen und lediglich vor lf10_starter_db und public Häkchen setzen
-9. mit Apply und ok bestätigen 
+npm install angular-oauth2-oidc
 ```
 
-# Keycloak
+## Schritt 2: OAuth-Client in der App-Konfiguration bereitstellen
 
-## Keycloak Token
-
-1. Auf der Projektebene [getBearerToken.http](./getBearerToken.http) öffnen.
-2. Neben der Request auf den grünen Pfeil drücken
-3. Aus dem Reponse das access_token kopieren
-
-## Keycloak-Integration
-
-Das Login soll als Single Sign On für alle Applikationen der HiTec GmbH implementiert werden. Dabei soll der Benutzer beim Aufruf von http://localhost:4200
-zunächst auf eine Seite im Firmendesign mit Informationen über die verschiedenen Anwendungen der HiTec GmbH geleitet werden. Auf dieser Seite
-befindet sich ein Link zum Employee-Management-Service. Klickt der Benutzer auf diesen Link und ist noch nicht angemeldet, wird er zum Login des bereits
-existierenden Keycloak-Service weitergeleitet, loggt sich dort ein und wird zum Frontend des Employee Management Services zurückgeleitet. Nach dem Logout
-wird der Benutzer wieder zur Startseite mit den Informationen über die Anwendungen der HiTec GmbH zurückgeleitet.
-Für die Keycloak-Integration benötigst du die Bibliotheken keycloak-angular und keycloak-js. Beide sind im Starter-Projekt schon enthalten (siehe package.json),
-brauchen also nicht mehr per npm install hinzugefügt werden. Eine Dokumentation der Bibliotheken findest du hier https://www.npmjs.com/package/keycloak-angular.
-
-Um den vorhandenen Keycloak-Service in deine Anwendung integrieren zu können, benötigst du folgende Informationen:
-
-URL, über der der Service zu erreichen ist: https://keycloak.szut.dev/auth,
-der Realm hat die Bezeichnung: szut,
-die ClientId deines Angular Frontends lautet: employee-management-service-frontend
-
-Hier ein Beispiel einer app.config.ts mit der Konfiguration für Keycloak. Mit dem KeycloakService, der hier definiert wird, kannst du in einem AuthGuard z.B. feststellen, ob der Benutzer eingeloggt ist oder nicht oder ihn mit keycloakService.login() zum Login weiterleiten.
+Öffne `src/app/app.config.ts` und füge den `provideOAuthClient()` zu den Providers hinzu:
 
 ```typescript
-import {APP_INITIALIZER, ApplicationConfig} from '@angular/core';
+import { ApplicationConfig } from '@angular/core';
 import { provideRouter } from '@angular/router';
-
 import { routes } from './app.routes';
-import {KeycloakAngularModule, KeycloakBearerInterceptor, KeycloakService} from "keycloak-angular";
-import {HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
-
-export const initializeKeycloak = (keycloak: KeycloakService) => async () =>
-  keycloak.init({
-    config: {
-      url: 'KEYCLOAK_URL',
-      realm: 'REALM',
-      clientId: 'CLIENT_ID',
-    },
-    loadUserProfileAtStartUp: true,
-    initOptions: {
-      onLoad: 'check-sso',
-      silentCheckSsoRedirectUri:
-        window.location.origin + '/silent-check-sso.html',
-      checkLoginIframe: false,
-      redirectUri: 'http://localhost:4200',
-    },
-  });
-
-
-function initializeApp(keycloak: KeycloakService): () => Promise<boolean> {
-  return () => initializeKeycloak(keycloak)();
-}
+import { provideHttpClient, withInterceptorsFromDi } from "@angular/common/http";
+import { provideOAuthClient } from 'angular-oauth2-oidc';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideRouter(routes),
-      KeycloakAngularModule,
-      {
-        provide: APP_INITIALIZER,
-        useFactory: initializeApp,
-        multi: true,
-        deps: [KeycloakService]
-      },
-      KeycloakService,
-      provideHttpClient(withInterceptorsFromDi()),
-      {
-        provide: HTTP_INTERCEPTORS,
-        useClass: KeycloakBearerInterceptor,
-        multi: true
-      }
-    ]
-  };
-
+  providers: [
+    provideRouter(routes),
+    provideHttpClient(withInterceptorsFromDi()),
+    provideOAuthClient()  // <-- NEU
+  ]
+};
 ```
 
+## Schritt 3: AuthService erstellen
 
-Der Benutzer, mit dem ihr eure Integration testen könnt, hat den Benutzernamen user und das Passwort test. Die einzige Rolle heißt user.
+Erstelle einen neuen Service `src/app/auth.service.ts`:
 
-Des Weiteren ist der Client mit der Bezeichnung employee-management-service-frontend wie folgt konfiguriert:
+```bash
+ng generate service auth
+```
 
-![](./resources/Client-Konfiguration I.png)
-![](./resources/Client-Konfiguration II.png)
+Implementiere den AuthService mit folgender Logik:
+
+```typescript
+import { Injectable } from '@angular/core';
+import { AuthConfig, OAuthService } from 'angular-oauth2-oidc';
+import { Router } from '@angular/router';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class AuthService {
+  private authConfig: AuthConfig = {
+    issuer: 'http://localhost:9000/application/o/employee_api/',
+    clientId: 'employee_api_client',
+    redirectUri: window.location.origin + '/callback',
+    responseType: 'code',
+    scope: 'openid profile email offline_access',
+    showDebugInformation: true,
+    requireHttps: false,
+    postLogoutRedirectUri: window.location.origin,
+    strictDiscoveryDocumentValidation: false,  // Wichtig für Authentik!
+  };
+
+  private configurePromise: Promise<void>;
+
+  constructor(
+    private oauthService: OAuthService,
+    private router: Router
+  ) {
+    this.configurePromise = this.configure();
+  }
+
+  private async configure() {
+    this.oauthService.configure(this.authConfig);
+
+    try {
+      // Discovery-Dokument laden
+      await this.oauthService.loadDiscoveryDocument();
+
+      // Authentik gibt die Endpoints als Arrays zurück, wir müssen sie normalisieren
+      const discoveryDoc = (this.oauthService as any).discoveryDocument;
+      if (discoveryDoc) {
+        const endpointFields = [
+          'authorization_endpoint',
+          'token_endpoint',
+          'userinfo_endpoint',
+          'jwks_uri',
+          'end_session_endpoint',
+          'revocation_endpoint',
+          'introspection_endpoint'
+        ];
+
+        endpointFields.forEach(field => {
+          if (Array.isArray(discoveryDoc[field]) && discoveryDoc[field].length > 0) {
+            discoveryDoc[field] = discoveryDoc[field][0];
+          }
+        });
+
+        (this.oauthService as any).discoveryDocument = discoveryDoc;
+      }
+
+      this.oauthService.setupAutomaticSilentRefresh();
+    } catch (error) {
+      console.error('Fehler beim Laden des Discovery-Dokuments:', error);
+    }
+  }
+
+  public async handleCallback(): Promise<boolean> {
+    try {
+      await this.configurePromise;
+      await this.oauthService.tryLogin();
+      return this.hasValidToken();
+    } catch (error) {
+      console.error('Fehler beim Login-Callback:', error);
+      return false;
+    }
+  }
+
+  public async login() {
+    await this.configurePromise;
+    this.oauthService.initCodeFlow();
+  }
+
+  public logout() {
+    this.oauthService.logOut();
+  }
+
+  public hasValidToken(): boolean {
+    return this.oauthService.hasValidAccessToken();
+  }
+
+  public getAccessToken(): string {
+    return this.oauthService.getAccessToken();
+  }
+}
+```
+
+**Wichtige Hinweise:**
+- `strictDiscoveryDocumentValidation: false` ist notwendig, weil Authentik einige Endpoints als Arrays zurückgibt
+- Die Normalisierung der Discovery-Document-Endpoints ist erforderlich
+- `configurePromise` stellt sicher, dass das Discovery-Dokument geladen ist, bevor Login-Operationen durchgeführt werden
+
+## Schritt 4: Callback-Komponente erstellen
+
+Erstelle eine Callback-Komponente für die Rückleitung nach dem Login:
+
+```bash
+ng generate component callback
+```
+
+Implementiere `src/app/callback/callback.component.ts`:
+
+```typescript
+import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+import { AuthService } from '../auth.service';
+
+@Component({
+  selector: 'app-callback',
+  standalone: true,
+  template: '<p>Processing login...</p>',
+})
+export class CallbackComponent implements OnInit {
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) {}
+
+  async ngOnInit() {
+    const success = await this.authService.handleCallback();
+    
+    if (success) {
+      this.router.navigate(['/employees']);
+    } else {
+      this.router.navigate(['/']);
+    }
+  }
+}
+```
+
+## Schritt 5: Auth Guard erstellen
+
+Erstelle einen Guard, um Routen zu schützen:
+
+```bash
+ng generate guard auth
+```
+
+Wähle "CanActivate" aus und implementiere `src/app/auth.guard.ts`:
+
+```typescript
+import { inject } from '@angular/core';
+import { CanActivateFn, Router } from '@angular/router';
+import { AuthService } from './auth.service';
+
+export const authGuard: CanActivateFn = (route, state) => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  if (authService.hasValidToken()) {
+    return true;
+  } else {
+    authService.login();
+    return false;
+  }
+};
+```
+
+## Schritt 6: Routen konfigurieren
+
+Füge die Callback-Route hinzu und schütze die Employee-Route mit dem Guard in `src/app/app.routes.ts`:
+
+```typescript
+import { Routes } from '@angular/router';
+import { HomeComponent } from './home/home.component';
+import { EmployeeListComponent } from './employee-list/employee-list.component';
+import { CallbackComponent } from './callback/callback.component';
+import { authGuard } from './auth.guard';
+
+export const routes: Routes = [
+  { path: '', component: HomeComponent },
+  { path: 'callback', component: CallbackComponent },
+  { path: 'employees', component: EmployeeListComponent, canActivate: [authGuard] },
+  { path: '**', redirectTo: '' }
+];
+```
+
+## Schritt 7: Employee-List-Komponente anpassen
+
+Füge den Access Token zu den HTTP-Requests hinzu:
+
+```typescript
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Observable, of } from "rxjs";
+import { HttpClient, HttpHeaders } from "@angular/common/http";
+import { Employee } from "../Employee";
+import { AuthService } from "../auth.service";
+
+@Component({
+  selector: 'app-employee-list',
+  standalone: true,
+  imports: [CommonModule],
+  templateUrl: './employee-list.component.html',
+  styleUrl: './employee-list.component.css'
+})
+export class EmployeeListComponent {
+  employees$: Observable<Employee[]>;
+
+  constructor(
+    private http: HttpClient,
+    private authService: AuthService
+  ) {
+    this.employees$ = of([]);
+    this.fetchData();
+  }
+
+  fetchData() {
+    const token = this.authService.getAccessToken();
+    this.employees$ = this.http.get<Employee[]>('http://localhost:8089/employees', {
+      headers: new HttpHeaders()
+        .set('Content-Type', 'application/json')
+        .set('Authorization', `Bearer ${token}`)
+    });
+  }
+
+ 
+}
+```
+
 
 # Bugs
 
