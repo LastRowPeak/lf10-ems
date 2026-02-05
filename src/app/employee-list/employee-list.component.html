@@ -1,9 +1,71 @@
-<h1>LF10-Starter</h1>
-Wenn Sie in der EmployeeListComponent.ts ein gültiges Bearer-Token eintragen, sollten hier die Namen der in der Datenbank gespeicherten Mitarbeiter angezeigt werden!
-<ul>
-  @for(e of employees$ | async; track e.id) {
-    <li>
-      {{e.lastName }}, {{e.firstName}}
-    </li>
-  }
-</ul>
+<div class="employee-panel">
+  <header class="panel-header">
+    <h6>Employees</h6>
+
+    <div class="sort-controls">
+      <button
+        class="sort-btn"
+        [class.active]="activeColumn === 'lastName'"
+        (click)="changeSorting('lastName')">
+        Name
+        <i class="bi {{ getSortIcon('lastName') }}"></i>
+      </button>
+
+      <button
+        class="sort-btn"
+        [class.active]="activeColumn === 'phone'"
+        (click)="changeSorting('phone')">
+        Phone
+        <i class="bi {{ getSortIcon('phone') }}"></i>
+      </button>
+    </div>
+  </header>
+
+  <div class="panel-body">
+    <div class="employees-cards">
+      @for(emp of employeesView$ | async; track emp.id) {
+        <div class="employee-card">
+
+          <div class="card-main">
+            <div class="avatar-big">
+              {{ emp.lastName?.charAt(0) || emp.firstName?.charAt(0) || '?' }}
+            </div>
+
+            <div class="card-info">
+              <div class="full-name">
+                {{ emp.firstName }} {{ emp.lastName }}
+              </div>
+              <div class="phone">
+                {{ emp.phone }}
+              </div>
+            </div>
+          </div>
+
+          <div class="card-actions">
+            <button
+              class="action view"
+              (click)="openInspector(emp.id)">
+              <i class="bi bi-eye"></i>
+            </button>
+
+            <button
+              class="action delete"
+              (click)="confirmRemoveEmployee(emp)">
+              <i class="bi bi-trash"></i>
+            </button>
+
+          </div>
+
+        </div>
+      }
+    </div>
+
+  </div>
+
+  <footer class="panel-footer">
+    <button class="add-btn" (click)="addEmployee()">
+      <i class="bi bi-plus-lg"></i>
+      Add employee
+    </button>
+  </footer>
+</div>

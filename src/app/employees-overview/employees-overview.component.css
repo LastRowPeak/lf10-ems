@@ -1,0 +1,27 @@
+.overview-container {
+  display: flex;
+  gap: 1rem;
+  height: calc(100vh - 160px - 1rem); /* Adjust if necessary for header/footer/margins and gap */
+}
+
+.filter-container {
+  width: 250px;
+  flex-shrink: 0;
+}
+
+.employee-list-container {
+  flex-grow: 1;
+  min-width: 0; /* Prevent overflow */
+}
+
+@media (max-width: 768px) {
+  .overview-container {
+    flex-direction: column;
+    height: auto; /* Allow height to be determined by content on small screens */
+  }
+
+  .filter-container {
+    width: 100%;
+  }
+}
+

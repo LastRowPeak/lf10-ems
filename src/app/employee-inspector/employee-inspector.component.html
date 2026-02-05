@@ -1,0 +1,123 @@
+<div class="inspector-wrapper" *ngIf="employee">
+
+  <!-- HEADER -->
+  <header class="inspector-header">
+    <div class="title">
+      <div class="avatar">
+        {{ employee.lastName?.charAt(0) || employee.firstName?.charAt(0) || '?' }}
+      </div>
+
+      <div>
+        <h4>{{ employee.firstName }} {{ employee.lastName }}</h4>
+        <span class="sub">Employee profile</span>
+      </div>
+    </div>
+
+    <button class="edit-btn" (click)="toggleEditMode()">
+      <i class="bi" [class.bi-pencil]="!isEditing" [class.bi-check-lg]="isEditing"></i>
+      {{ isEditing ? 'Save changes' : 'Edit profile' }}
+    </button>
+  </header>
+
+  <!-- BODY -->
+  <div class="inspector-body">
+
+    <!-- DETAILS -->
+    <section class="details-card">
+      <h6>Contact details</h6>
+
+      <div class="field">
+        <label>First name</label>
+        <ng-container *ngIf="isEditing; else viewFirst">
+          <input class="form-control" [(ngModel)]="employee.firstName" name="firstName" required>
+        </ng-container>
+        <ng-template #viewFirst>{{ employee.firstName }}</ng-template>
+      </div>
+
+      <div class="field">
+        <label>Last name</label>
+        <ng-container *ngIf="isEditing; else viewLast">
+          <input class="form-control" [(ngModel)]="employee.lastName" name="lastName" required>
+        </ng-container>
+        <ng-template #viewLast>{{ employee.lastName }}</ng-template>
+      </div>
+
+      <div class="field">
+        <label>Phone</label>
+        <ng-container *ngIf="isEditing; else viewPhone">
+          <input class="form-control" [(ngModel)]="employee.phone" name="phone" required>
+        </ng-container>
+        <ng-template #viewPhone>{{ employee.phone }}</ng-template>
+      </div>
+
+      <div class="field-group">
+        <div class="field">
+          <label>Street</label>
+          <input *ngIf="isEditing" class="form-control" [(ngModel)]="employee.street">
+          <span *ngIf="!isEditing">{{ employee.street }}</span>
+        </div>
+
+        <div class="field">
+          <label>City</label>
+          <input *ngIf="isEditing" class="form-control" [(ngModel)]="employee.city">
+          <span *ngIf="!isEditing">{{ employee.city }}</span>
+        </div>
+
+        <div class="field">
+          <label>Postcode</label>
+          <input *ngIf="isEditing" class="form-control" [(ngModel)]="employee.postcode">
+          <span *ngIf="!isEditing">{{ employee.postcode }}</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- SKILLS -->
+    <section class="skills-card">
+      <h6>Skills</h6>
+
+      <div class="skills-list">
+        <span class="skill-chip" *ngFor="let skill of employee.skillSet">
+          {{ skill.skill }}
+          <button *ngIf="isEditing" (click)="deleteSkill(skill.id)">×</button>
+        </span>
+
+        <span *ngIf="employee.skillSet?.length === 0" class="empty">
+          No skills assigned
+        </span>
+      </div>
+
+      <div class="add-skill" *ngIf="isEditing">
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Add or create skill..."
+          [(ngModel)]="skillSearchText"
+          (ngModelChange)="filterSkillsForDropdown()"
+          (keydown.enter)="handleSkillSearchEnter($event)"
+        />
+
+        <div class="skill-suggestions" *ngIf="dropdownSkills.length || showCreateSkill">
+          <div
+            class="suggestion"
+            *ngFor="let skill of dropdownSkills"
+            (click)="addSkill(skill.id)">
+            {{ skill.skill }}
+          </div>
+
+          <div
+            class="suggestion create"
+            *ngIf="showCreateSkill"
+            (click)="createNewSkill()">
+            Create "{{ skillSearchText }}"
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <div *ngIf="errorMessage" class="error-box">
+    {{ errorMessage }}
+  </div>
+
+</div>

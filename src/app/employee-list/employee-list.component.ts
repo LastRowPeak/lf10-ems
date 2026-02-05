@@ -1,8 +1,13 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Observable, of } from "rxjs";
-import { HttpClient, HttpHeaders } from "@angular/common/http";
-import { Employee } from "../Employee";
+import { Router } from '@angular/router';
+import { Observable, combineLatest } from 'rxjs';
+import { map } from 'rxjs/operators';
+
+import { Employee } from '../../model/Employee';
+import { DbService } from '../../services/db.service';
+
+type SortDir = 'asc' | 'desc';
 
 @Component({
   selector: 'app-employee-list',
@@ -12,19 +17,110 @@ import { Employee } from "../Employee";
   styleUrl: './employee-list.component.css'
 })
 export class EmployeeListComponent {
-  bearer = 'eyJhbGciOiJSUzI1NiIsImtpZCI6IjBiNGE3Mjc5YjQ1NzJiMDIwMDk3MzI2MTBhNzU4NGU2IiwidHlwIjoiSldUIn0.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjkwMDAvYXBwbGljYXRpb24vby9lbXBsb3llZV9hcGkvIiwic3ViIjoiNzZlOWNmYTdiMzgwNTkzYzYwODk2MDRiMzkwMGE1YzJhYzA5YWNiMDMzNTI4YWUxMTdmMjVhNDZiMTU4MzNlYiIsImF1ZCI6ImVtcGxveWVlX2FwaV9jbGllbnQiLCJleHAiOjE3NjE3Mjk0MDksImlhdCI6MTc2MTcyNjQwOSwiYXV0aF90aW1lIjoxNzYxNzI2NDA5LCJhY3IiOiJnb2F1dGhlbnRpay5pby9wcm92aWRlcnMvb2F1dGgyL2RlZmF1bHQiLCJhenAiOiJlbXBsb3llZV9hcGlfY2xpZW50IiwidWlkIjoiODBaOGg0eTVISnVoVkFqWExZUE05blpoWTU2YnlOUGpTWk9MUUxkQyJ9.uy8uRxarKW5VKfWdj5vzdiF0DZEO84y4V2lEb-KYg2qP-Cwiotgy07tWv-djR4Pk1kHxZlalT3NrZkT5LfGJBXfpsLRuVX_gmrRBwymdyhLjkxHOotSBXQTdm_0yZDOieinJX8ruF90st37fWSTtzUgsT3zTFXhwsZNW8Tjf7lgiZOoZDNAg1mocqVHi98tJA1d2wIK2CEwE2baIbsRIU9G9vxn6vW9r_cNrgs5wIFfYsWU1WwIwrgbRIElLcS7rBVITmPq69LXtREZ-FfVYudhiryR6-HhZqaRFxKvsnlTt95kojKJ3OfSjosJvlwgjCOd0Owsj2x68zh2P_Jgtskal7mu1-tpCo5Rx_nudo74nv2n9GSWLQ1Wp91JHDIjQtmF9Ye3eTXyfseIKMj2BmxQGfSiOSXkLiNVwxEeQLqsL4R2Hm3D0CSgW-obHcarqzKzrMi9jDK1lyKJMZorOkx9maIUJBXY8QBsX0X75FhRNlIEwqawMdQDu43Bk15BsTxVzaOKY6u6rC78iE-lJm6x99O_9OERDHs4Th0wYszdhcB6GZHmW0leBBNdlWsgePjA7cFx44oT7leAVbVALcl7LrA-I3DNSWm7G8HSJuqTQ_obdux4erxN4DOI8pvHlPR4saZFoTM7fvCdUHHQTfezgusAughZZX4f_16_xhH4';
-  employees$: Observable<Employee[]>;
 
-  constructor(private http: HttpClient) {
-    this.employees$ = of([]);
-    this.fetchData();
+  activeColumn = 'lastName';
+  direction: 'asc' | 'desc' = 'asc';
+
+  employeesView$!: Observable<Employee[]>;
+
+  constructor(
+    private router: Router,
+    protected db: DbService
+  ) {
+    this.employeesView$ = this.buildEmployeesStream();
   }
 
-  fetchData() {
-    this.employees$ = this.http.get<Employee[]>('http://localhost:8089/employees', {
-      headers: new HttpHeaders()
-        .set('Content-Type', 'application/json')
-        .set('Authorization', `Bearer ${this.bearer}`)
+  changeSorting(column: string): void {
+    if (this.activeColumn === column) {
+      this.direction = this.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.activeColumn = column;
+      this.direction = 'asc';
+    }
+
+    this.employeesView$ = this.buildEmployeesStream();
+  }
+
+  private buildEmployeesStream(): Observable<Employee[]> {
+    return combineLatest([
+      this.db.employees$,
+      this.db.selectedSkillIds$
+    ]).pipe(
+      map(([employees = [], selectedSkills]) => {
+        const visible = this.applySkillFilter(employees, selectedSkills);
+        return this.sortEmployees(visible);
+      })
+    );
+  }
+
+  private applySkillFilter(list: Employee[], skills: number[]): Employee[] {
+    if (!skills.length) {
+      return list;
+    }
+
+    return list.filter(emp => {
+      const ids = emp.skillSet?.map(s => s.id) ?? [];
+      return skills.every(id => ids.includes(id));
     });
   }
+
+  private sortEmployees(list: Employee[]): Employee[] {
+    const extractor = this.valueExtractor(this.activeColumn);
+
+    return [...list].sort((a, b) => {
+      const aVal = extractor(a);
+      const bVal = extractor(b);
+
+      if (aVal == null) return 1;
+      if (bVal == null) return -1;
+
+      const result = aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
+      return this.direction === 'asc' ? result : -result;
+    });
+  }
+
+  private valueExtractor(column: string): (e: Employee) => string | number | undefined {
+    const map: Record<string, (e: Employee) => string | number | undefined> = {
+      lastName: e => `${e.lastName}, ${e.firstName}`.toLowerCase(),
+      phone: e => e.phone?.toLowerCase()
+    };
+
+    return map[column] ?? ((e: any) => e[column]);
+  }
+
+  getSortIcon(column: string): string {
+    if (this.activeColumn !== column) {
+      return 'bi-arrow-down-up';
+    }
+    return this.direction === 'asc'
+      ? 'bi-sort-alpha-down'
+      : 'bi-sort-alpha-up';
+  }
+
+  addEmployee(): void {
+    this.router.navigate(['/inspector']);
+  }
+
+  removeEmployee(id?: number): void {
+    this.db.deleteEmployee(id);
+  }
+
+  openInspector(id?: number): void {
+    this.router.navigate(['/inspector'], {
+      queryParams: { id }
+    });
+  }
+
+  confirmRemoveEmployee(emp: Employee): void {
+    const fullName = `${emp.firstName ?? ''} ${emp.lastName ?? ''}`.trim();
+
+    const confirmed = window.confirm(
+      `Are you sure you want to remove "${fullName}"?`
+    );
+
+    if (confirmed) {
+      this.removeEmployee(emp.id);
+    }
+  }
+
 }
