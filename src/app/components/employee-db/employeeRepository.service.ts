@@ -5,7 +5,7 @@ import { AuthService } from "./auth.service";
 import { BehaviorSubject, Observable, of, forkJoin } from "rxjs";
 import { Router } from "@angular/router";
 //TODO: Skills import
-import { Skill } from "../model/Skill";
+import { Skill } from "../../model/Skill";
 import { map, tap, switchMap, take } from 'rxjs/operators';
 
 interface EmployeeSkillTuple {
@@ -118,5 +118,27 @@ export class employeeRepositoryService {
       next: () => this.fetchEmployees(),
       error: (err: Error) => console.error('Delete failed', err)
     });
+  }
+
+  deleteSkill(id: number): Observable<any> {
+    const employeeDb: employeeRepositoryService = new employeeRepositoryService(this.http, this.authService);
+    return employeeDb.getEmployeesBySkill(id).pipe(
+      take(1),
+      switchMap(employeesToUpdate => {
+        if (employeesToUpdate && employeesToUpdate.length > 0) {
+          const updateObservables = employeesToUpdate.map(emp => {
+            return employeeDb.getEmployee(emp.id!).pipe(
+              switchMap(fullEmployee => {
+                fullEmployee.skillSet = fullEmployee.skillSet?.filter(s => s.id !== id);
+                return employeeDb.updateEmployee(fullEmployee);
+              })
+            );
+          });
+          return forkJoin(updateObservables);
+        }
+        return of(null);
+      }),
+      switchMap(() => this.deleteSkill(id))
+    );
   }
 }

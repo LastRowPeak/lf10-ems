@@ -1,0 +1,58 @@
+<div class="skill-container">
+  <div class="card skill-card">
+    <header class="card-header">
+      <h2 class="title">Skill Management</h2>
+    </header>
+
+    <div class="search-row">
+      <input
+        type="text"
+        class="form-control form-control-sm search-input"
+        placeholder="Search skills..."
+        [ngModel]="skillSearchText.getValue()"
+        (ngModelChange)="onSearchChange($event)"
+      />
+    </div>
+
+    <section class="card-body list-area">
+      <ul class="list-group">
+        <li
+          *ngFor="let skill of skills$ | async; trackBy: trackById"
+          class="list-group-item d-flex justify-content-between align-items-center"
+        >
+          <div class="skill-name" *ngIf="!skill.editing">{{ skill.skill }}</div>
+
+          <div class="skill-edit" *ngIf="skill.editing">
+            <input
+              #editInput
+              type="text"
+              class="form-control edit-input"
+              [(ngModel)]="skill.newName"
+              (keyup.enter)="updateSkill(skill)"
+            />
+          </div>
+
+          <div class="actions">
+            <span class="badge count-badge rounded-pill me-2">{{ skill.count }}</span>
+            <button *ngIf="!skill.editing" class="btn btn-outline-primary btn-sm me-2" (click)="toggleEdit(skill)">Edit</button>
+            <button *ngIf="skill.editing" class="btn btn-outline-primary btn-sm me-2" (click)="updateSkill(skill)">Save</button>
+            <button class="btn btn-outline-danger btn-sm" (click)="deleteSkill(skill)">Delete</button>
+          </div>
+        </li>
+      </ul>
+    </section>
+
+    <footer class="card-footer footer-row">
+      <div class="input-group">
+        <input
+          type="text"
+          class="form-control"
+          placeholder="New Skill Name"
+          [(ngModel)]="skillNameInput"
+          (keyup.enter)="createNewSkill()"
+        />
+        <button class="btn btn-outline-primary" type="button" (click)="createNewSkill()">Add Skill</button>
+      </div>
+    </footer>
+  </div>
+</div>
