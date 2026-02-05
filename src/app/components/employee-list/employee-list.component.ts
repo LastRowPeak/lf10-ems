@@ -5,7 +5,7 @@ import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 import { Employee } from '../../model/Employee';
-import { DbService } from '../../services/db.service';
+import {employeeRepositoryService} from "../employee-db/employeeRepository.service";
 
 type SortDir = 'asc' | 'desc';
 
@@ -25,7 +25,7 @@ export class EmployeeListComponent {
 
   constructor(
     private router: Router,
-    protected db: DbService
+    protected db: employeeRepositoryService
   ) {
     this.employeesView$ = this.buildEmployeesStream();
   }
@@ -44,6 +44,7 @@ export class EmployeeListComponent {
   private buildEmployeesStream(): Observable<Employee[]> {
     return combineLatest([
       this.db.employees$,
+      //TODO Skills selectedSkillIds$
       this.db.selectedSkillIds$
     ]).pipe(
       map(([employees = [], selectedSkills]) => {

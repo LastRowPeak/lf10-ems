@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import {EmployeeListComponent} from "../employee-list/employee-list.component";
 import {FilterComponent} from "../filter/filter.component";
-import { DbService } from '../../services/db.service';
+import {employeeRepositoryService} from "../employee-db/employeeRepository.service";
 
 @Component({
   selector: 'app-employees-overview',
@@ -15,10 +15,11 @@ import { DbService } from '../../services/db.service';
 })
 export class EmployeesOverviewComponent implements OnInit {
 
-  constructor(private dbService: DbService) {}
+  constructor(private dbService: employeeRepositoryService) {}
 
   ngOnInit(): void {
     this.dbService.fetchEmployees();
+    //TODO Skills fetchQualifications
     this.dbService.fetchQualifications();
   }
 }

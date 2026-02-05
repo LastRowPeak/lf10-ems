@@ -76,6 +76,7 @@
       <h6>Skills</h6>
 
       <div class="skills-list">
+        <!-- TODO: Skills list-->
         <span class="skill-chip" *ngFor="let skill of employee.skillSet">
           {{ skill.skill }}
           <button *ngIf="isEditing" (click)="deleteSkill(skill.id)">×</button>
@@ -96,9 +97,13 @@
           (keydown.enter)="handleSkillSearchEnter($event)"
         />
 
+
         <div class="skill-suggestions" *ngIf="dropdownSkills.length || showCreateSkill">
+          <!-- TODO: Skills list -->
           <div
+
             class="suggestion"
+
             *ngFor="let skill of dropdownSkills"
             (click)="addSkill(skill.id)">
             {{ skill.skill }}

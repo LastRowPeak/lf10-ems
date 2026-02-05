@@ -4,8 +4,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 
 import { Employee } from '../../model/Employee';
+//TODO: Skills import
 import { Skill } from '../../model/Skill';
-import { DbService } from '../../services/db.service';
+import { employeeRepositoryService } from "../employee-db/employeeRepository.service";
 
 @Component({
   selector: 'app-employee-inspector',
@@ -33,7 +34,7 @@ export class EmployeeInspectorComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private db: DbService
+    private db: employeeRepositoryService
   ) {}
 
   ngOnInit(): void {
@@ -57,6 +58,7 @@ export class EmployeeInspectorComponent implements OnInit {
   }
 
   private initializeSkills(): void {
+    //TODO Skills
     this.db.skills$.subscribe(skills => {
       this.allSkills = skills;
       this.refreshAvailableSkills();
@@ -81,7 +83,6 @@ export class EmployeeInspectorComponent implements OnInit {
     this.isEditing = true;
   }
 
-  // edit
 
   toggleEditMode(): void {
     this.errorMessage = null;
@@ -124,7 +125,6 @@ export class EmployeeInspectorComponent implements OnInit {
     });
   }
 
-  // skills
 
   onSearchChange(): void {
     this.updateDropdown();
@@ -175,6 +175,7 @@ export class EmployeeInspectorComponent implements OnInit {
     const skill = this.allSkills.find(s => s.id === skillId);
     if (!skill?.skill) return;
 
+    // TODO Skills hinzufügen für EmployeeId
     this.db.addQualificationToEmployee(this.employee.id, skill.skill).subscribe(() => {
       this.reloadEmployeeSkills();
     });
@@ -185,6 +186,7 @@ export class EmployeeInspectorComponent implements OnInit {
   createSkill(): void {
     if (!this.searchText || !this.employee.id) return;
 
+    //TODO Skills createSkill / fetchQualifications
     this.db.createSkill(this.searchText).subscribe(newSkill => {
       this.db.fetchQualifications();
       this.assignSkill(newSkill.id!);
@@ -195,6 +197,7 @@ export class EmployeeInspectorComponent implements OnInit {
   removeSkill(skillId?: number): void {
     if (!this.employee.id || !skillId) return;
 
+    //TODO Skills removeSkill
     this.db.deleteQualificationFromEmployee(this.employee.id, skillId).subscribe(() => {
       this.reloadEmployeeSkills();
       this.db.fetchEmployees();
@@ -204,6 +207,7 @@ export class EmployeeInspectorComponent implements OnInit {
   private reloadEmployeeSkills(): void {
     if (!this.employee.id) return;
 
+    //TODO Skills getSkills für EmployeeId
     this.db.getEmployeeQualifications(this.employee.id).subscribe(skills => {
       this.employee.skillSet = skills;
       this.refreshAvailableSkills();
@@ -211,16 +215,12 @@ export class EmployeeInspectorComponent implements OnInit {
     });
   }
 
-  /* ----------------------------
-     ERROR HANDLING
-  ----------------------------- */
 
   private handleError(err: any, fallback: string): void {
     console.error(err);
     this.errorMessage = err?.error?.message || fallback;
   }
 
-  // ---- HTML COMPATIBILITY ALIASES ----
 
   deleteSkill(skillId?: number): void {
     this.removeSkill(skillId);
