@@ -1,11 +1,10 @@
 import { Injectable } from '@angular/core';
-import { Employee } from "../../model/Employee";
+import { Employee } from "../model/Employee";
 import { HttpClient, HttpHeaders } from "@angular/common/http";
 import { AuthService } from "./auth.service";
 import { BehaviorSubject, Observable, of, forkJoin } from "rxjs";
-import { Router } from "@angular/router";
 //TODO: Skills import
-import { Skill } from "../../model/Skill";
+import { Skill } from "../model/Skill";
 import { map, tap, switchMap, take } from 'rxjs/operators';
 
 interface EmployeeSkillTuple {
@@ -16,7 +15,7 @@ interface EmployeeSkillTuple {
 @Injectable({
   providedIn: 'root'
 })
-export class employeeRepositoryService {
+export class EmployeeRepositoryService {
   private employeesSubject = new BehaviorSubject<Employee[]>([]);
   public employees$ = this.employeesSubject.asObservable(); //employees als Observable um immer die gleichen zu lesen
   private token!: string | string[];
@@ -55,7 +54,7 @@ export class employeeRepositoryService {
     }).pipe(
       tap(employee => {
         if (employee && employee.skillSet) {
-        //TODO Skillsort
+          //TODO Skillsort
         }
       })
     );
@@ -121,16 +120,15 @@ export class employeeRepositoryService {
   }
 
   deleteSkill(id: number): Observable<any> {
-    const employeeDb: employeeRepositoryService = new employeeRepositoryService(this.http, this.authService);
-    return employeeDb.getEmployeesBySkill(id).pipe(
+    return this.getEmployeesBySkill(id).pipe(
       take(1),
       switchMap(employeesToUpdate => {
         if (employeesToUpdate && employeesToUpdate.length > 0) {
           const updateObservables = employeesToUpdate.map(emp => {
-            return employeeDb.getEmployee(emp.id!).pipe(
+            return this.getEmployee(emp.id!).pipe(
               switchMap(fullEmployee => {
                 fullEmployee.skillSet = fullEmployee.skillSet?.filter(s => s.id !== id);
-                return employeeDb.updateEmployee(fullEmployee);
+                return this.updateEmployee(fullEmployee);
               })
             );
           });

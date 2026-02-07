@@ -5,8 +5,8 @@ import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 import { Employee } from '../../model/Employee';
-import { employeeRepositoryService } from "../employee-db/employeeRepository.service";
-import { skillRepositoryService } from "../skill-db/skillRepository.service";
+import { EmployeeRepositoryService } from "../../services/employee-repository.service";
+import { SkillRepositoryService } from "../../services/skill-repository.service";
 
 type SortDir = 'asc' | 'desc';
 
@@ -26,8 +26,8 @@ export class EmployeeListComponent {
 
   constructor(
     private router: Router,
-    protected empRepo: employeeRepositoryService,
-    protected skillRepo: skillRepositoryService
+    protected employeeRepo: EmployeeRepositoryService,
+    protected skillRepo: SkillRepositoryService
   ) {
     this.employeesView$ = this.buildEmployeesStream();
   }
@@ -45,7 +45,7 @@ export class EmployeeListComponent {
 
   private buildEmployeesStream(): Observable<Employee[]> {
     return combineLatest([
-      this.empRepo.employees$,
+      this.employeeRepo.employees$,
       this.skillRepo.selectedSkillIds$
     ]).pipe(
       map(([employees = [], selectedSkills]) => {
@@ -104,7 +104,7 @@ export class EmployeeListComponent {
   }
 
   removeEmployee(id?: number): void {
-    this.empRepo.deleteEmployee(id);
+    this.employeeRepo.deleteEmployee(id);
   }
 
   openInspector(id?: number): void {

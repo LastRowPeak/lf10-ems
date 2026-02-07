@@ -4,8 +4,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 import { Employee } from '../../model/Employee';
 import { Skill } from '../../model/Skill';
-import { employeeRepositoryService } from "../employee-db/employeeRepository.service";
-import { skillRepositoryService } from "../skill-db/skillRepository.service";
+import { EmployeeRepositoryService } from "../../services/employee-repository.service";
+import { SkillRepositoryService } from "../../services/skill-repository.service";
 
 @Component({
   selector: 'app-employee-inspector',
@@ -33,8 +33,8 @@ export class EmployeeInspectorComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private empRepo: employeeRepositoryService,
-    private skillRepo: skillRepositoryService
+    private employeeRepo: EmployeeRepositoryService,
+    private skillRepo: SkillRepositoryService
   ) {}
 
   ngOnInit(): void {
@@ -68,7 +68,7 @@ export class EmployeeInspectorComponent implements OnInit {
   }
 
   private loadEmployee(id: number): void {
-    this.empRepo.getEmployee(id).subscribe(emp => {
+    this.employeeRepo.getEmployee(id).subscribe(emp => {
       this.employee = emp;
       this.employee.skillSet ??= [];
       this.refreshAvailableSkills();
@@ -103,14 +103,14 @@ export class EmployeeInspectorComponent implements OnInit {
   }
 
   private updateEmployee(): void {
-    this.empRepo.updateEmployee(this.employee).subscribe({
+    this.employeeRepo.updateEmployee(this.employee).subscribe({
       next: () => (this.isEditing = false),
       error: err => this.handleError(err, 'Failed to update employee')
     });
   }
 
   private createEmployee(): void {
-    this.empRepo.createEmployee(this.employee).subscribe({
+    this.employeeRepo.createEmployee(this.employee).subscribe({
       next: emp => {
         this.employee = emp;
         this.isEditing = false;
@@ -196,7 +196,7 @@ export class EmployeeInspectorComponent implements OnInit {
 
     this.skillRepo.deleteSkillFromEmployee(this.employee.id, skillId).subscribe(() => {
       this.reloadEmployeeSkills();
-      this.empRepo.fetchEmployees();
+      this.employeeRepo.fetchEmployees();
     });
   }
 

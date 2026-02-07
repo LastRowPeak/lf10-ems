@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import {EmployeeListComponent} from "../employee-list/employee-list.component";
-import {employeeRepositoryService} from "../employee-db/employeeRepository.service";
-import {skillRepositoryService} from "../skill-db/skillRepository.service";
+import {EmployeeRepositoryService} from "../../services/employee-repository.service";
+import {SkillRepositoryService} from "../../services/skill-repository.service";
 
 @Component({
   selector: 'app-employees-overview',
@@ -15,12 +15,12 @@ import {skillRepositoryService} from "../skill-db/skillRepository.service";
 export class EmployeesOverviewComponent implements OnInit {
 
   constructor(
-    private empRepo: employeeRepositoryService,
-    private skillRepo: skillRepositoryService
+    private employeeRepo: EmployeeRepositoryService,
+    private skillRepo: SkillRepositoryService
   ) {}
 
   ngOnInit(): void {
-    this.empRepo.fetchEmployees();
+    this.employeeRepo.fetchEmployees();
     this.skillRepo.fetchSkills();
   }
 }

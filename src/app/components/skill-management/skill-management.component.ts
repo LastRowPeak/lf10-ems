@@ -3,8 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Observable, BehaviorSubject, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { skillRepositoryService } from '../skill-db/skillRepository.service';
-import { employeeRepositoryService } from "../employee-db/employeeRepository.service";
+import { SkillRepositoryService } from '../../services/skill-repository.service';
+import { EmployeeRepositoryService } from "../../services/employee-repository.service";
 import { Skill } from '../../model/Skill';
 
 interface EnhancedSkill extends Skill {
@@ -28,8 +28,8 @@ export class SkillManagementComponent implements OnInit {
   private filterTerm$ = new BehaviorSubject<string>('');
 
   constructor(
-    private skillRepo: skillRepositoryService,
-    private empRepo: employeeRepositoryService
+    private employeeRepo: EmployeeRepositoryService,
+    private skillRepo: SkillRepositoryService
   ) {
     this.enhancedSkillList$ = this.buildSkillListObservable();
   }
@@ -41,11 +41,10 @@ export class SkillManagementComponent implements OnInit {
   private buildSkillListObservable(): Observable<EnhancedSkill[]> {
     return combineLatest([
       this.skillRepo.skills$,
-      this.empRepo.getEmployees()
+      this.employeeRepo.getEmployees()
     ]).pipe(
       map(([skillList, employeeList]) => {
-        const enrichedSkills = this.enrichSkillsWithUsage(skillList, employeeList);
-        return enrichedSkills;
+        return this.enrichSkillsWithUsage(skillList, employeeList);
       })
     );
   }
@@ -65,7 +64,7 @@ export class SkillManagementComponent implements OnInit {
 
   private loadInitialData(): void {
     this.skillRepo.fetchSkills();
-    this.empRepo.fetchEmployees();
+    this.employeeRepo.fetchEmployees();
   }
 
   createNewSkill(): void {
@@ -102,7 +101,7 @@ export class SkillManagementComponent implements OnInit {
   }
 
   private refreshAllData(): void {
-    this.empRepo.fetchEmployees();
+    this.employeeRepo.fetchEmployees();
     this.skillRepo.fetchSkills();
   }
 

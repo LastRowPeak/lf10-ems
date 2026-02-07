@@ -1,17 +1,15 @@
-import { Injectable } from '@angular/core';
-import { Employee } from "../../model/Employee";
-import { employeeRepositoryService } from "../employee-db/employeeRepository.service";
-import { HttpClient, HttpHeaders } from "@angular/common/http";
-import { AuthService } from "./auth.service";
-import { BehaviorSubject, Observable, of, forkJoin } from "rxjs";
-import { Router } from "@angular/router";
-import { Skill } from "../../model/Skill";
-import { map, tap, switchMap, take } from 'rxjs/operators';
+import {Injectable} from '@angular/core';
+import {Employee} from "../model/Employee";
+import {HttpClient, HttpHeaders} from "@angular/common/http";
+import {BehaviorSubject, Observable, of, forkJoin} from "rxjs";
+import {Skill} from "../model/Skill";
+import {map, tap, switchMap, take} from 'rxjs/operators';
+import {AuthService} from "./auth.service";
 
 @Injectable({
   providedIn: 'root'
 })
-export class skillRepositoryService {
+export class SkillRepositoryService {
   private selectedSkillIdsSubject = new BehaviorSubject<number[]>([]);
   public selectedSkillIds$ = this.selectedSkillIdsSubject.asObservable(); //lesbare version des BehaviourSubjects als observable für htmls
 
@@ -69,7 +67,7 @@ export class skillRepositoryService {
 
   createSkill(skillName: string): Observable<Skill> {
     this.token = this.authService.getAccessToken();
-    return this.http.post<Skill>('http://localhost:8089/skills', { skill: skillName }, {
+    return this.http.post<Skill>('http://localhost:8089/skills', {skill: skillName}, {
       headers: new HttpHeaders()
         .set('Content-Type', 'application/json')
         .set('Authorization', `Bearer ${this.token}`)
@@ -92,11 +90,10 @@ export class skillRepositoryService {
 
   addSkillToEmployee(employeeId: number, skillName: string): Observable<any> {
     this.token = this.authService.getAccessToken();
-    return this.http.post(`http://localhost:8089/employees/${employeeId}/skills`, { "skill": skillName }, {
+    return this.http.post(`http://localhost:8089/employees/${employeeId}/skills`, {"skill": skillName}, {
       headers: new HttpHeaders()
         .set('Content-Type', 'application/json')
         .set('Authorization', `Bearer ${this.token}`)
     });
   }
-
 }
