@@ -1,58 +1,34 @@
-<div class="skill-container">
-  <div class="card skill-card">
-    <header class="card-header">
-      <h2 class="title">Skill Management</h2>
-    </header>
-
-    <div class="search-row">
-      <input
-        type="text"
-        class="form-control form-control-sm search-input"
-        placeholder="Search skills..."
-        [ngModel]="skillSearchText.getValue()"
-        (ngModelChange)="onSearchChange($event)"
-      />
-    </div>
-
-    <section class="card-body list-area">
-      <ul class="list-group">
-        <li
-          *ngFor="let skill of skills$ | async; trackBy: trackById"
-          class="list-group-item d-flex justify-content-between align-items-center"
-        >
-          <div class="skill-name" *ngIf="!skill.editing">{{ skill.skill }}</div>
-
-          <div class="skill-edit" *ngIf="skill.editing">
-            <input
-              #editInput
-              type="text"
-              class="form-control edit-input"
-              [(ngModel)]="skill.newName"
-              (keyup.enter)="updateSkill(skill)"
-            />
-          </div>
-
-          <div class="actions">
-            <span class="badge count-badge rounded-pill me-2">{{ skill.count }}</span>
-            <button *ngIf="!skill.editing" class="btn btn-outline-primary btn-sm me-2" (click)="toggleEdit(skill)">Edit</button>
-            <button *ngIf="skill.editing" class="btn btn-outline-primary btn-sm me-2" (click)="updateSkill(skill)">Save</button>
-            <button class="btn btn-outline-danger btn-sm" (click)="deleteSkill(skill)">Delete</button>
-          </div>
-        </li>
-      </ul>
-    </section>
-
-    <footer class="card-footer footer-row">
-      <div class="input-group">
-        <input
-          type="text"
-          class="form-control"
-          placeholder="New Skill Name"
-          [(ngModel)]="skillNameInput"
-          (keyup.enter)="createNewSkill()"
-        />
-        <button class="btn btn-outline-primary" type="button" (click)="createNewSkill()">Add Skill</button>
-      </div>
-    </footer>
-  </div>
+<div class="toolbar">
+  <input pInputText placeholder="Search skills..." [value]="filter()" (input)="filter.set($any($event.target).value)" />
+  <button pButton label="New Skill" icon="pi pi-plus" (click)="openCreate()"></button>
 </div>
+
+<p-table [value]="filteredSkills()" [paginator]="true" [rows]="10" dataKey="id">
+  <ng-template pTemplate="header">
+    <tr><th>Skill</th><th>Usage</th><th style="width:200px">Actions</th></tr>
+  </ng-template>
+
+  <ng-template pTemplate="body" let-s>
+    <tr>
+      <td>{{ s.skill }}</td>
+      <td>{{ usageCount(s.id) }}</td>
+      <td>
+        <button pButton icon="pi pi-pencil" class="p-button-text" (click)="openEdit(s)"></button>
+        <button pButton icon="pi pi-trash" class="p-button-danger p-button-text" (click)="deleteSkill(s.id)"></button>
+      </td>
+    </tr>
+  </ng-template>
+</p-table>
+
+<p-dialog header="{{ editing() ? 'Edit Skill' : 'New Skill' }}" [visible]="dialogVisible()" [modal]="true">
+  <div class="p-fluid">
+    <div class="p-field">
+      <label>Skill</label>
+      <input pInputText [(ngModel)]="editValue" />
+    </div>
+  </div>
+  <p-footer>
+    <button pButton label="Save" class="p-button-success" (click)="save()"></button>
+    <button pButton label="Cancel" class="p-button-plain" (click)="closeDialog()"></button>
+  </p-footer>
+</p-dialog>

@@ -1,5 +1,4 @@
-//TODO: Skills import
-import {Skill} from "./Skill";
+import {Skill} from "./skill";
 
 export class Employee {
   constructor(public id?: number,

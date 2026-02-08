@@ -1,0 +1,14 @@
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">HiTec EMS</div>
+    <button pButton label="Employees" (click)="view.set('employees')" [class.active]="view() === 'employees'"></button>
+    <button pButton label="Skills" (click)="view.set('skills')" [class.active]="view() === 'skills'"></button>
+    <div class="spacer"></div>
+    <button pButton label="Logout" icon="pi pi-sign-out" class="logout" (click)="logout()"></button>
+  </aside>
+
+  <main class="content">
+    <app-employee-management *ngIf="view() === 'employees'"></app-employee-management>
+    <app-skill-management *ngIf="view() === 'skills'"></app-skill-management>
+  </main>
+</div>

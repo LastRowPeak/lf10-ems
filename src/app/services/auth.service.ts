@@ -15,7 +15,7 @@ export class AuthService {
     showDebugInformation: true,
     requireHttps: false,
     postLogoutRedirectUri: window.location.origin,
-    strictDiscoveryDocumentValidation: false,  // Wichtig für Authentik! [wowzers]
+    strictDiscoveryDocumentValidation: false,
   };
 
   private configurePromise: Promise<void>;
@@ -31,10 +31,8 @@ export class AuthService {
     this.oauthService.configure(this.authConfig);
 
     try {
-      // Discovery-Dokument laden
       await this.oauthService.loadDiscoveryDocument();
 
-      // Authentik gibt die Endpoints als Arrays zurück, wir müssen sie normalisieren
       const discoveryDoc = (this.oauthService as any).discoveryDocument;
       if (discoveryDoc) {
         const endpointFields = [

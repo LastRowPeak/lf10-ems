@@ -1,155 +1,84 @@
-import { Component, AfterViewInit, OnInit, ViewChildren, QueryList, ElementRef } from '@angular/core';
+import {Component, OnInit, computed, signal, WritableSignal, Signal} from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TableModule } from 'primeng/table';
+import { InputTextModule } from 'primeng/inputtext';
+import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
 import { FormsModule } from '@angular/forms';
-import { Observable, BehaviorSubject, combineLatest } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { SkillRepositoryService } from '../../services/skill-repository.service';
-import { EmployeeRepositoryService } from "../../services/employee-repository.service";
-import { Skill } from '../../model/Skill';
-
-interface EnhancedSkill extends Skill {
-  usageCount: number;
-  isInEditMode?: boolean;
-  editedName?: string;
-}
+import { RepositoryService } from '../../services/repository.service';
+import { Skill } from '../../models/skill';
+import {Employee} from "../../models/employee";
 
 @Component({
   selector: 'app-skill-management',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, TableModule, InputTextModule, ButtonModule, DialogModule, FormsModule],
   templateUrl: './skill-management.component.html',
-  styleUrls: ['./skill-management.component.css']
+  styleUrl: './skill-management.component.css'
 })
 export class SkillManagementComponent implements OnInit {
-  @ViewChildren('inputField') inputFields!: QueryList<ElementRef>;
+  filter: WritableSignal<string> = signal('');
+  dialogVisible: WritableSignal<boolean> = signal(false);
+  editing: WritableSignal<boolean> = signal(false);
+  editValue = '';
+  editId?: number | null;
 
-  enhancedSkillList$: Observable<EnhancedSkill[]>;
-  skillNameInput = '';
-  private filterTerm$ = new BehaviorSubject<string>('');
+  skills: Signal<Skill[]>;
+  employees: Signal<Employee[]>;
 
-  constructor(
-    private employeeRepo: EmployeeRepositoryService,
-    private skillRepo: SkillRepositoryService
-  ) {
-    this.enhancedSkillList$ = this.buildSkillListObservable();
+  filteredSkills = computed(() => {
+    const term = (this.filter() || '').trim().toLowerCase();
+    const skills = this.skills();
+    if (!term) return skills;
+    return skills.filter(s => s.skill.toLowerCase().includes(term));
+  });
+
+  constructor(private repo: RepositoryService) {
+    this.skills = this.repo.skillsSignal;
+    this.employees = this.repo.employeesSignal;
   }
 
-  ngOnInit(): void {
-    this.loadInitialData();
+  async ngOnInit(): Promise<void> {
+    await this.repo.loadAll();
   }
 
-  private buildSkillListObservable(): Observable<EnhancedSkill[]> {
-    return combineLatest([
-      this.skillRepo.skills$,
-      this.employeeRepo.getEmployees()
-    ]).pipe(
-      map(([skillList, employeeList]) => {
-        return this.enrichSkillsWithUsage(skillList, employeeList);
-      })
-    );
+  openCreate() {
+    this.editing.set(false);
+    this.editValue = '';
+    this.editId = undefined;
+    this.dialogVisible.set(true);
   }
 
-  private enrichSkillsWithUsage(skills: Skill[], employees: any[]): EnhancedSkill[] {
-    return skills.map(skill => ({
-      ...skill,
-      usageCount: this.calculateUsageCount(skill, employees)
-    }));
+  openEdit(s: Skill) {
+    this.editing.set(true);
+    this.editValue = s.skill;
+    this.editId = s.id;
+    this.dialogVisible.set(true);
   }
 
-  private calculateUsageCount(skill: Skill, employees: any[]): number {
-    return employees.filter(emp =>
-      emp.skillSet?.some((s: Skill) => s.id === skill.id)
-    ).length;
-  }
+  closeDialog() { this.dialogVisible.set(false); }
 
-  private loadInitialData(): void {
-    this.skillRepo.fetchSkills();
-    this.employeeRepo.fetchEmployees();
-  }
-
-  createNewSkill(): void {
-    const trimmedName = this.skillNameInput.trim();
-    if (!trimmedName) {
-      return;
-    }
-
-    this.skillRepo.createSkill(trimmedName).subscribe(() => {
-      this.skillRepo.fetchSkills();
-      this.skillNameInput = '';
-    });
-  }
-
-  removeSkill(skill: EnhancedSkill): void {
-    if (skill.id === undefined) {
-      return;
-    }
-
-    if (skill.usageCount > 0 && !this.confirmDeletion(skill)) {
-      return;
-    }
-
-    this.skillRepo.deleteSkill(skill.id).subscribe({
-      next: () => this.refreshAllData(),
-      error: (error) => console.error('Fehler beim Löschen:', error)
-    });
-  }
-
-  private confirmDeletion(skill: EnhancedSkill): boolean {
-    const message = `Der Skill "${skill.skill}" ist ${skill.usageCount} Mitarbeiter(n) zugewiesen. ` +
-      `Möchten Sie ihn wirklich löschen? Dies entfernt den Skill von allen zugewiesenen Mitarbeitern.`;
-    return confirm(message);
-  }
-
-  private refreshAllData(): void {
-    this.employeeRepo.fetchEmployees();
-    this.skillRepo.fetchSkills();
-  }
-
-  activateEditMode(skill: EnhancedSkill): void {
-    this.saveAnyActiveEdits();
-
-    skill.isInEditMode = true;
-    skill.editedName = skill.skill;
-
-    this.focusInputAfterRender(skill);
-  }
-
-  private saveAnyActiveEdits(): void {
-    this.enhancedSkillList$.pipe(
-      map(skills => skills.find(s => s.isInEditMode))
-    ).subscribe(activeSkill => {
-      if (activeSkill) {
-        this.persistSkillChanges(activeSkill);
+  async save() {
+    const name = (this.editValue || '').trim();
+    if (!name) return;
+    try {
+      if (this.editing() && this.editId) {
+        await this.repo.updateSkill({ id: this.editId, skill: name });
+      } else {
+        await this.repo.createSkill(name);
       }
-    }).unsubscribe();
+      this.dialogVisible.set(false);
+    } catch (err) { console.error(err); }
   }
 
-  private focusInputAfterRender(skill: EnhancedSkill): void {
-    setTimeout(() => {
-      this.enhancedSkillList$.pipe(
-        map(skills => skills.findIndex(s => s.id === skill.id))
-      ).subscribe(position => {
-        if (position >= 0) {
-          const inputElement = this.inputFields.toArray()[position];
-          inputElement?.nativeElement.focus();
-        }
-      });
-    }, 0);
+  usageCount(skillId?: number): number {
+    if (!skillId) return 0;
+    return this.employees().filter(e => e.skillSet?.some(s => s.id === skillId)).length;
   }
 
-  persistSkillChanges(skill: EnhancedSkill): void {
-    if (skill.id === undefined || !skill.editedName) {
-      return;
-    }
-
-    const updatedSkillData: Skill = {
-      id: skill.id,
-      skill: skill.editedName
-    };
-
-    this.skillRepo.updateSkill(updatedSkillData).subscribe(() => {
-      this.skillRepo.fetchSkills();
-      skill.isInEditMode = false;
-    });
+  async deleteSkill(skillId?: number) {
+    if (!skillId) return;
+    if (!confirm('Delete skill?')) return;
+    try { await this.repo.deleteSkill(skillId); } catch (err) { console.error(err); }
   }
 }
