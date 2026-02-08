@@ -1,0 +1,6 @@
+.shell{display:flex;height:100vh}
+.sidebar{width:220px;padding:16px;background:#fff;border-right:1px solid #eee;display:flex;flex-direction:column;gap:8px}
+.sidebar .brand{font-weight:700;margin-bottom:8px}
+.sidebar button.active{background:#1976d2;color:#fff}
+.content{flex:1;padding:16px;overflow:auto;background:#f6f7fb}
+.spacer{flex:1}

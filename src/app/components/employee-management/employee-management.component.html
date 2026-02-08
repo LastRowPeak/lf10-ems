@@ -1,0 +1,91 @@
+<div class="toolbar">
+  <input pInputText placeholder="Global search..." [value]="globalFilter()" (input)="globalFilter.set($any($event.target).value)" />
+  <button pButton label="New Employee" icon="pi pi-plus" (click)="openCreate()"></button>
+</div>
+
+<p-table [value]="employeesView()" [paginator]="true" [rows]="10" dataKey="id" [globalFilterFields]="['firstName','lastName','city','street']">
+  <ng-template pTemplate="header">
+    <tr>
+      <th pSortableColumn="lastName">Name <p-sortIcon field="lastName"></p-sortIcon></th>
+      <th pSortableColumn="city">City <p-sortIcon field="city"></p-sortIcon></th>
+      <th>Phone</th>
+      <th>Skills</th>
+      <th style="width:160px">Actions</th>
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="body" let-e>
+    <tr>
+      <td>{{ e.lastName }}, {{ e.firstName }}</td>
+      <td>{{ e.city }}</td>
+      <td>{{ e.phone }}</td>
+      <td>
+        <p-chip *ngFor="let s of e.skillSet" [label]="s.skill"></p-chip>
+      </td>
+      <td>
+        <button pButton icon="pi pi-pencil" class="p-button-text" (click)="openEdit(e)"></button>
+        <button pButton icon="pi pi-trash" class="p-button-danger p-button-text" (click)="deleteEmployee(e.id)"></button>
+      </td>
+    </tr>
+  </ng-template>
+</p-table>
+
+<p-dialog header="{{ editMode() ? 'Edit Employee' : 'New Employee' }}" [visible]="dialogVisible()" [modal]="true" [style]="{width: '640px'}">
+  <div class="p-fluid">
+    <div class="p-field p-grid">
+      <label class="p-col-12 p-md-2">First name</label>
+      <div class="p-col-12 p-md-10">
+        <input pInputText [(ngModel)]="editEmployee().firstName" />
+      </div>
+    </div>
+
+    <div class="p-field p-grid">
+      <label class="p-col-12 p-md-2">Last name</label>
+      <div class="p-col-12 p-md-10">
+        <input pInputText [(ngModel)]="editEmployee().lastName" />
+      </div>
+    </div>
+
+    <div class="p-field p-grid">
+      <label class="p-col-12 p-md-2">Street</label>
+      <div class="p-col-12 p-md-10">
+        <input pInputText [(ngModel)]="editEmployee().street" />
+      </div>
+    </div>
+
+    <div class="p-field p-grid">
+      <label class="p-col-12 p-md-2">Postcode</label>
+      <div class="p-col-12 p-md-10">
+        <input pInputText [(ngModel)]="editEmployee().postcode" />
+      </div>
+    </div>
+
+    <div class="p-field p-grid">
+      <label class="p-col-12 p-md-2">City</label>
+      <div class="p-col-12 p-md-10">
+        <input pInputText [(ngModel)]="editEmployee().city" />
+      </div>
+    </div>
+
+    <div class="p-field p-grid">
+      <label class="p-col-12 p-md-2">Phone</label>
+      <div class="p-col-12 p-md-10">
+        <input pInputText [(ngModel)]="editEmployee().phone" />
+      </div>
+    </div>
+
+    <div class="p-field p-grid">
+      <label class="p-col-12 p-md-2">Skills</label>
+      <div class="p-col-12 p-md-10">
+        <p-multiSelect [options]="skillOptions()" optionLabel="skill" optionValue="id"
+                       [(ngModel)]="editSkillIdsProxy" defaultLabel="Select skills">
+        </p-multiSelect>
+      </div>
+    </div>
+  </div>
+
+  <p-footer>
+    <button pButton label="Save" class="p-button-success" (click)="save()"></button>
+    <button pButton label="Cancel" class="p-button-plain" (click)="closeDialog()"></button>
+  </p-footer>
+</p-dialog>

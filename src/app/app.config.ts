@@ -4,11 +4,15 @@ import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
 import {provideOAuthClient} from "angular-oauth2-oidc";
+import {providePrimeNG} from "primeng/config";
+import Aura from '@primeuix/themes/aura';
+
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
     provideHttpClient(withInterceptorsFromDi()),
-    provideOAuthClient()
+    provideOAuthClient(),
+    providePrimeNG({theme: {preset: Aura }})
   ]
 };
