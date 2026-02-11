@@ -8,16 +8,21 @@ import {providePrimeNG} from "primeng/config";
 import Aura from '@primeuix/themes/aura';
 import {provideAnimations} from "@angular/platform-browser/animations";
 import {HttpErrorInterceptor} from "./http-error.interceptor";
+import {MessageService} from "primeng/api";
 
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
     provideHttpClient(withInterceptorsFromDi()),
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: HttpErrorInterceptor,
+      multi: true
+    },
     provideOAuthClient(),
     providePrimeNG({theme: {preset: Aura }}),
     provideAnimations(),
-    { provide: HTTP_INTERCEPTORS, useClass: HttpErrorInterceptor, multi: true }
-
+    MessageService
   ]
 };
