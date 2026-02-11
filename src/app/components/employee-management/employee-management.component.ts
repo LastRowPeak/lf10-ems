@@ -22,17 +22,13 @@ export class EmployeeManagementComponent implements OnInit {
   globalFilter: WritableSignal<string> = signal('');
   dialogVisible: WritableSignal<boolean> = signal(false);
   editMode: WritableSignal<boolean> = signal(false); // true when editing, false when creating
-  // editable employee (signal)
   private _editEmployee = signal<Employee>({} as Employee);
   editEmployee = () => this._editEmployee();
-  // edit multi-select proxy (skill id array)
   editSkillIdsProxy: number[] = [];
 
-  // derived lists
   employees: Signal<Employee[]>;
   skills: Signal<Skill[]>;
 
-  // computed view: simple client-side search + skill filtering (global only for now)
   employeesView = computed(() => {
     const term = (this.globalFilter() || '').trim().toLowerCase();
     const list = this.employees();
@@ -51,7 +47,6 @@ export class EmployeeManagementComponent implements OnInit {
     await this.repo.loadAll();
   }
 
-  // convert skills signal to p-multiSelect options (plain array)
   skillOptions() { return this.skills(); }
 
   openCreate() {
@@ -62,7 +57,6 @@ export class EmployeeManagementComponent implements OnInit {
   }
 
   openEdit(e: Employee) {
-    // clone to avoid two-way mutating list directly
     const clone: Employee = { ...e, skillSet: e.skillSet ? e.skillSet.map(s => ({ ...s })) : [] };
     this._editEmployee.set(clone);
     this.editSkillIdsProxy = clone.skillSet?.map(s => s.id!) ?? [];
@@ -73,7 +67,6 @@ export class EmployeeManagementComponent implements OnInit {
   closeDialog() { this.dialogVisible.set(false); }
 
   async save() {
-    // collect skill objects from ids
     const emp = { ...this.editEmployee() } as Employee;
     const allSkills = this.skills();
     emp.skillSet = (this.editSkillIdsProxy || []).map(id => {
@@ -90,7 +83,6 @@ export class EmployeeManagementComponent implements OnInit {
       this.dialogVisible.set(false);
     } catch (err) {
       console.error('save employee failed', err);
-      // minimal error handling: console + keep dialog open
     }
   }
 

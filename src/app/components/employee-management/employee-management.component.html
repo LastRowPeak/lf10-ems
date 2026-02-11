@@ -14,7 +14,7 @@
     </tr>
   </ng-template>
 
-  <ng-template pTemplate="body" let-e>
+  <ng-template #body let-e>
     <tr>
       <td>{{ e.lastName }}, {{ e.firstName }}</td>
       <td>{{ e.city }}</td>
@@ -30,7 +30,7 @@
   </ng-template>
 </p-table>
 
-<p-dialog header="{{ editMode() ? 'Edit Employee' : 'New Employee' }}" [visible]="dialogVisible()" [modal]="true" [style]="{width: '640px'}">
+<p-dialog header="{{ editMode() ? 'Edit Employee' : 'New Employee' }}" [visible]="dialogVisible()" [modal]="true" [closable]="false" [style]="{width: '640px'}">
   <div class="p-fluid">
     <div class="p-field p-grid">
       <label class="p-col-12 p-md-2">First name</label>
@@ -84,8 +84,8 @@
     </div>
   </div>
 
-  <p-footer>
+  <ng-template #footer>
     <button pButton label="Save" class="p-button-success" (click)="save()"></button>
     <button pButton label="Cancel" class="p-button-plain" (click)="closeDialog()"></button>
-  </p-footer>
+  </ng-template>
 </p-dialog>

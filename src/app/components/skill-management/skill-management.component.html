@@ -4,11 +4,11 @@
 </div>
 
 <p-table [value]="filteredSkills()" [paginator]="true" [rows]="10" dataKey="id">
-  <ng-template pTemplate="header">
+  <ng-template #header>
     <tr><th>Skill</th><th>Usage</th><th style="width:200px">Actions</th></tr>
   </ng-template>
 
-  <ng-template pTemplate="body" let-s>
+  <ng-template #body let-s>
     <tr>
       <td>{{ s.skill }}</td>
       <td>{{ usageCount(s.id) }}</td>
@@ -20,15 +20,16 @@
   </ng-template>
 </p-table>
 
-<p-dialog header="{{ editing() ? 'Edit Skill' : 'New Skill' }}" [visible]="dialogVisible()" [modal]="true">
+<p-dialog header="{{ editing() ? 'Edit Skill' : 'New Skill' }}" [visible]="dialogVisible()" [modal]="true" closeOnEscape="true" [closable]="false"
+>
   <div class="p-fluid">
     <div class="p-field">
       <label>Skill</label>
       <input pInputText [(ngModel)]="editValue" />
     </div>
   </div>
-  <p-footer>
+  <ng-template #footer>
     <button pButton label="Save" class="p-button-success" (click)="save()"></button>
     <button pButton label="Cancel" class="p-button-plain" (click)="closeDialog()"></button>
-  </p-footer>
+  </ng-template>
 </p-dialog>
