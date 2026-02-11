@@ -4,11 +4,12 @@ import { ButtonModule } from 'primeng/button';
 import { EmployeeManagementComponent } from '../employee-management/employee-management.component';
 import { SkillManagementComponent } from '../skill-management/skill-management.component';
 import { AuthService } from '../../services/auth.service';
+import {Toast} from "primeng/toast";
 
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [CommonModule, ButtonModule, EmployeeManagementComponent, SkillManagementComponent],
+  imports: [CommonModule, ButtonModule, EmployeeManagementComponent, SkillManagementComponent, Toast],
   templateUrl: './shell.component.html',
   styleUrl: './shell.component.scss'
 })
