@@ -8,6 +8,9 @@ import { AuthService } from './auth.service'; // if you have one; otherwise remo
 @Injectable({ providedIn: 'root' })
 export class RepositoryService {
   private readonly baseUrl = 'http://localhost:8089';
+  private readonly employeePath:string = '/employees';
+  private readonly skillPath: string = '/qualifications';
+
 
   private _employees = signal<Employee[]>([]);
   readonly employeesSignal: Signal<Employee[]> = this._employees;
@@ -38,7 +41,7 @@ export class RepositoryService {
   async loadEmployees(): Promise<Employee[]> {
     const headers = this.buildHeaders();
     try {
-      const list = await firstValueFrom(this.http.get<Employee[]>(`${this.baseUrl}/employees`, { headers }));
+      const list = await firstValueFrom(this.http.get<Employee[]>(`${this.baseUrl + this.employeePath}`, { headers }));
       list.forEach(emp => {
         if (emp.skillSet && Array.isArray(emp.skillSet)) {
           emp.skillSet = emp.skillSet.slice().sort((a, b) => (a.skill > b.skill ? 1 : -1));
@@ -56,7 +59,7 @@ export class RepositoryService {
   async loadSkills(): Promise<Skill[]> {
     const headers = this.buildHeaders();
     try {
-      const list = await firstValueFrom(this.http.get<Skill[]>(`${this.baseUrl}/skills`, { headers }));
+      const list = await firstValueFrom(this.http.get<Skill[]>(`${this.baseUrl + this.skillPath}`, { headers }));
       list.sort((a, b) => (a.skill > b.skill ? 1 : -1));
       this._skills.set(list);
       return list;
@@ -76,7 +79,7 @@ export class RepositoryService {
     if (employee.skillSet && employee.skillSet.length && typeof employee.skillSet[0] === 'object') {
       payload.skillSet = employee.skillSet.map(s => s.id);
     }
-    const created = await firstValueFrom(this.http.post<Employee>(`${this.baseUrl}/employees`, payload, { headers }));
+    const created = await firstValueFrom(this.http.post<Employee>(`${this.baseUrl + this.employeePath}`, payload, { headers }));
     await this.loadEmployees();
     return created;
   }
@@ -86,7 +89,7 @@ export class RepositoryService {
     const headers = this.buildHeaders();
     const payload: any = { ...employee };
     if (employee.skillSet) payload.skillSet = employee.skillSet.map(s => s.id);
-    const updated = await firstValueFrom(this.http.put<Employee>(`${this.baseUrl}/employees/${employee.id}`, payload, { headers }));
+    const updated = await firstValueFrom(this.http.put<Employee>(`${this.baseUrl + this.employeePath}/${employee.id}`, payload, { headers }));
     await this.loadEmployees();
     return updated;
   }
@@ -94,14 +97,14 @@ export class RepositoryService {
   async deleteEmployee(id?: number): Promise<void> {
     if (!id) return;
     const headers = this.buildHeaders();
-    await firstValueFrom(this.http.delete<void>(`${this.baseUrl}/employees/${id}`, { headers }));
+    await firstValueFrom(this.http.delete<void>(`${this.baseUrl + this.employeePath}/${id}`, { headers }));
     await this.loadEmployees();
   }
 
   async getEmployee(id: number): Promise<Employee> {
     if (!id) throw new Error('getEmployee: id required');
     const headers = this.buildHeaders();
-    const emp = await firstValueFrom(this.http.get<Employee>(`${this.baseUrl}/employees/${id}`, { headers }));
+    const emp = await firstValueFrom(this.http.get<Employee>(`${this.baseUrl + this.employeePath}/${id}`, { headers }));
     if (emp.skillSet) emp.skillSet = emp.skillSet.slice().sort((a, b) => (a.skill > b.skill ? 1 : -1));
     return emp;
   }
@@ -110,7 +113,7 @@ export class RepositoryService {
 
   async createSkill(skillName: string): Promise<Skill> {
     const headers = this.buildHeaders();
-    const created = await firstValueFrom(this.http.post<Skill>(`${this.baseUrl}/qualifications`, { skill: skillName }, { headers }));
+    const created = await firstValueFrom(this.http.post<Skill>(`${this.baseUrl + this.skillPath}`, { skill: skillName }, { headers }));
     await this.loadSkills();
     return created;
   }
@@ -118,7 +121,7 @@ export class RepositoryService {
   async updateSkill(skill: Skill): Promise<Skill> {
     if (!skill.id) throw new Error('updateSkill: id required');
     const headers = this.buildHeaders();
-    const updated = await firstValueFrom(this.http.put<Skill>(`${this.baseUrl}/qualifications/${skill.id}`, skill, { headers }));
+    const updated = await firstValueFrom(this.http.put<Skill>(`${this.baseUrl + this.skillPath}/${skill.id}`, skill, { headers }));
     await this.loadSkills();
     return updated;
   }
@@ -127,7 +130,7 @@ export class RepositoryService {
     if (!skillId) return;
     // naive approach: try to delete (backend may prevent if in use)
     const headers = this.buildHeaders();
-    await firstValueFrom(this.http.delete<void>(`${this.baseUrl}/qualifications/${skillId}`, { headers }));
+    await firstValueFrom(this.http.delete<void>(`${this.baseUrl + this.skillPath}/${skillId}`, { headers }));
     await Promise.all([this.loadSkills(), this.loadEmployees()]);
   }
 
@@ -135,15 +138,15 @@ export class RepositoryService {
 
   async addSkillToEmployee(employeeId: number, skillName: string): Promise<void> {
     const headers = this.buildHeaders();
-    await firstValueFrom(this.http.post(`${this.baseUrl}/employees/${employeeId}/skills`, { skill: skillName }, { headers }));
+    await firstValueFrom(this.http.post(`${this.baseUrl + this.employeePath}/${employeeId + this.skillPath}`, { skill: skillName }, { headers }));
     await this.loadEmployees();
   }
 
-  async removeSkillFromEmployee(employeeId: number, skillId: number): Promise<void> {
-    const headers = this.buildHeaders();
-    await firstValueFrom(this.http.delete(`${this.baseUrl}/employees/${employeeId}/skills/${skillId}`, { headers }));
-    await this.loadEmployees();
-  }
+  // async removeSkillFromEmployee(employeeId: number, skillId: number): Promise<void> {
+  //   const headers = this.buildHeaders();
+  //   await firstValueFrom(this.http.delete(`${this.baseUrl + this.employeePath}/${employeeId + this.skillPath}/${skillId}`, { headers }));
+  //   await this.loadEmployees();
+  // }
 
   // ---- client-only selection state ----
 
