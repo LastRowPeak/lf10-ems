@@ -77,9 +77,9 @@
     <div class="p-field p-grid">
       <label class="p-col-12 p-md-2">Skills</label>
       <div class="p-col-12 p-md-10">
-        <p-multiSelect [options]="skillOptions()" optionLabel="skill" optionValue="id"
-                       [(ngModel)]="editSkillIdsProxy" defaultLabel="Select skills">
-        </p-multiSelect>
+        <p-multiselect [options]="skillOptions()" display="chip" optionLabel="skill" optionValue="id"
+                       [(ngModel)]="editSkillIdsProxy" placeholder="select skills">
+        </p-multiselect>
       </div>
     </div>
   </div>

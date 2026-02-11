@@ -110,7 +110,7 @@ export class RepositoryService {
 
   async createSkill(skillName: string): Promise<Skill> {
     const headers = this.buildHeaders();
-    const created = await firstValueFrom(this.http.post<Skill>(`${this.baseUrl}/skills`, { skill: skillName }, { headers }));
+    const created = await firstValueFrom(this.http.post<Skill>(`${this.baseUrl}/qualifications`, { skill: skillName }, { headers }));
     await this.loadSkills();
     return created;
   }
@@ -118,7 +118,7 @@ export class RepositoryService {
   async updateSkill(skill: Skill): Promise<Skill> {
     if (!skill.id) throw new Error('updateSkill: id required');
     const headers = this.buildHeaders();
-    const updated = await firstValueFrom(this.http.put<Skill>(`${this.baseUrl}/skills/${skill.id}`, skill, { headers }));
+    const updated = await firstValueFrom(this.http.put<Skill>(`${this.baseUrl}/qualifications/${skill.id}`, skill, { headers }));
     await this.loadSkills();
     return updated;
   }
@@ -127,7 +127,7 @@ export class RepositoryService {
     if (!skillId) return;
     // naive approach: try to delete (backend may prevent if in use)
     const headers = this.buildHeaders();
-    await firstValueFrom(this.http.delete<void>(`${this.baseUrl}/skills/${skillId}`, { headers }));
+    await firstValueFrom(this.http.delete<void>(`${this.baseUrl}/qualifications/${skillId}`, { headers }));
     await Promise.all([this.loadSkills(), this.loadEmployees()]);
   }
 
