@@ -23,8 +23,8 @@
 <p-dialog header="{{ editing() ? 'Edit Skill' : 'New Skill' }}" [visible]="dialogVisible()" [modal]="true" closeOnEscape="true" [closable]="false"
 >
   <div class="p-fluid">
+    <label class="p-col-12 p-md-3">Skill</label>
     <div class="p-field">
-      <label>Skill</label>
       <input pInputText [(ngModel)]="editValue" />
     </div>
   </div>

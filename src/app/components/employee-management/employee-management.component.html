@@ -32,57 +32,72 @@
 
 <p-dialog header="{{ editMode() ? 'Edit Employee' : 'New Employee' }}" [visible]="dialogVisible()" [modal]="true" [closable]="false" [style]="{width: '640px'}">
   <div class="p-fluid">
-    <div class="p-field p-grid">
-      <label class="p-col-12 p-md-2">First name</label>
-      <div class="p-col-12 p-md-10">
-        <input pInputText [(ngModel)]="editEmployee().firstName" />
-      </div>
-    </div>
+    <div class="p-grid">
 
-    <div class="p-field p-grid">
-      <label class="p-col-12 p-md-2">Last name</label>
-      <div class="p-col-12 p-md-10">
-        <input pInputText [(ngModel)]="editEmployee().lastName" />
-      </div>
-    </div>
+      <!-- LEFT COLUMN -->
+      <div class="p-col-12 p-md-8">
+        <div class="p-field p-grid">
+          <label class="p-col-12 p-md-3">First name</label>
+          <div class="p-col-12 p-md-9">
+            <input pInputText [(ngModel)]="editEmployee().firstName" />
+          </div>
+        </div>
 
-    <div class="p-field p-grid">
-      <label class="p-col-12 p-md-2">Street</label>
-      <div class="p-col-12 p-md-10">
-        <input pInputText [(ngModel)]="editEmployee().street" />
-      </div>
-    </div>
+        <div class="p-field p-grid">
+          <label class="p-col-12 p-md-3">Last name</label>
+          <div class="p-col-12 p-md-9">
+            <input pInputText [(ngModel)]="editEmployee().lastName" />
+          </div>
+        </div>
 
-    <div class="p-field p-grid">
-      <label class="p-col-12 p-md-2">Postcode</label>
-      <div class="p-col-12 p-md-10">
-        <input pInputText [(ngModel)]="editEmployee().postcode" />
-      </div>
-    </div>
+        <div class="p-field p-grid">
+          <label class="p-col-12 p-md-3">Street</label>
+          <div class="p-col-12 p-md-9">
+            <input pInputText [(ngModel)]="editEmployee().street" />
+          </div>
+        </div>
 
-    <div class="p-field p-grid">
-      <label class="p-col-12 p-md-2">City</label>
-      <div class="p-col-12 p-md-10">
-        <input pInputText [(ngModel)]="editEmployee().city" />
-      </div>
-    </div>
+        <div class="p-field p-grid">
+          <label class="p-col-12 p-md-3">Postcode</label>
+          <div class="p-col-12 p-md-9">
+            <input pInputText [(ngModel)]="editEmployee().postcode" />
+          </div>
+        </div>
 
-    <div class="p-field p-grid">
-      <label class="p-col-12 p-md-2">Phone</label>
-      <div class="p-col-12 p-md-10">
-        <input pInputText [(ngModel)]="editEmployee().phone" />
-      </div>
-    </div>
+        <div class="p-field p-grid">
+          <label class="p-col-12 p-md-3">City</label>
+          <div class="p-col-12 p-md-9">
+            <input pInputText [(ngModel)]="editEmployee().city" />
+          </div>
+        </div>
 
-    <div class="p-field p-grid">
-      <label class="p-col-12 p-md-2">Skills</label>
-      <div class="p-col-12 p-md-10">
-        <p-multiselect [options]="skillOptions()" display="chip" optionLabel="skill" optionValue="id"
-                       [(ngModel)]="editSkillIdsProxy" placeholder="select skills">
-        </p-multiselect>
+        <div class="p-field p-grid">
+          <label class="p-col-12 p-md-3">Phone</label>
+          <div class="p-col-12 p-md-9">
+            <input pInputText [(ngModel)]="editEmployee().phone" />
+          </div>
+        </div>
       </div>
+
+      <label class="p-col-12 p-md-3">Skills</label>
+      <div class="p-col-12 p-md-3">
+        <div class="p-field">
+          <p-multiselect
+            [options]="skillOptions()"
+            display="chip"
+            optionLabel="skill"
+            optionValue="id"
+            [(ngModel)]="editSkillIdsProxy"
+            placeholder="Select skills"
+            appendTo="body">
+          </p-multiselect>
+        </div>
+      </div>
+
     </div>
   </div>
+
+
 
   <ng-template #footer>
     <button pButton label="Save" class="p-button-success" (click)="save()"></button>
